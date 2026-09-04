@@ -20,6 +20,8 @@ class Mission(Base):
     name = Column(String, nullable=False)
     description = Column(Text)
     status = Column(Enum(MissionStatus), default=MissionStatus.PLANNED, nullable=False)
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    # Nullable until authentication exists: a mission created through the API
+    # today has no authenticated owner to attribute it to.
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
