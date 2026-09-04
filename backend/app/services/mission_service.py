@@ -176,6 +176,14 @@ def plan_route(start_lat, start_lon, goal_lat, goal_lon):
     return [{"lat": lat, "lon": lon} for lat, lon in path]
 
 
+def get_missions(db, status=None):
+    """Return missions newest first, optionally filtered by status."""
+    query = db.query(Mission)
+    if status is not None:
+        query = query.filter(Mission.status == status)
+    return query.order_by(Mission.created_at.desc()).all()
+
+
 def get_mission(db, mission_id):
     """Return a mission, or None if it does not exist."""
     return db.get(Mission, mission_id)

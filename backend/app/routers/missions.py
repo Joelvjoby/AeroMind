@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.mission import MissionStatus
 from app.schemas.mission import (
     MissionCreate,
     MissionDetailResponse,
@@ -19,6 +20,17 @@ router = APIRouter(prefix="/missions", tags=["missions"])
 def create_mission(payload: MissionCreate, db: Session = Depends(get_db)):
     """Plan a new mission and store its route."""
     return mission_service.create_mission(db, payload)
+
+
+@router.get("", response_model=list[MissionResponse])
+def list_missions(
+    mission_status: MissionStatus | None = Query(
+        None, alias="status", description="Filter by mission status"
+    ),
+    db: Session = Depends(get_db),
+):
+    """List missions, newest first."""
+    return mission_service.get_missions(db, status=mission_status)
 
 
 @router.get("/{mission_id}", response_model=MissionDetailResponse)

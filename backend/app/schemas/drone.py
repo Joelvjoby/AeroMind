@@ -17,3 +17,6 @@ class DroneResponse(BaseModel):
     battery_level: float | None = None
     current_lat: float | None = None
     current_lon: float | None = None
+    # Live decision-making state, read from the in-memory FSM registry
+    # rather than the drones table.
+    fsm_state: str | None = None

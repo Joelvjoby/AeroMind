@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* AeroMind is dark-only. Page colours come from the body classes in
+   app/layout.tsx; this just tells the browser to match its own chrome
+   (scrollbars, form controls) to the dark surface. */
+:root {
+  color-scheme: dark;
+}

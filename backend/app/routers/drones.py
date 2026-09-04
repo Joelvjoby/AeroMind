@@ -10,5 +10,5 @@ router = APIRouter(prefix="/drones", tags=["drones"])
 
 @router.get("", response_model=list[DroneResponse])
 def list_drones(db: Session = Depends(get_db)):
-    """List every drone in the fleet with its current status."""
-    return drone_service.get_all_drones(db)
+    """List every drone in the fleet with its current status and FSM state."""
+    return drone_service.get_fleet_status(db)
