@@ -1,6 +1,7 @@
 from app.services import (
     alert_service,
     drone_service,
+    fsm_service,
     mission_service,
     telemetry_service,
 )
@@ -8,6 +9,7 @@ from app.services import (
 __all__ = [
     "alert_service",
     "drone_service",
+    "fsm_service",
     "mission_service",
     "telemetry_service",
 ]

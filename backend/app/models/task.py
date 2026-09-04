@@ -1,7 +1,7 @@
 import uuid
 import enum
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Enum, ForeignKey
+from sqlalchemy import JSON, Column, DateTime, Enum, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
@@ -23,3 +23,7 @@ class Task(Base):
     status = Column(Enum(TaskStatus), default=TaskStatus.PENDING, nullable=False)
     assigned_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime)
+
+    # Route computed by A* at assignment time: a list of {"lat", "lon"}
+    # points. Null when planning failed or was skipped.
+    planned_path = Column(JSON, nullable=True)

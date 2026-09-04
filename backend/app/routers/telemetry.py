@@ -14,12 +14,20 @@ STREAM_INTERVAL_SECONDS = 1.0
 
 
 @router.websocket("/stream")
-async def stream_telemetry(websocket: WebSocket, drone_id: UUID | None = None):
+async def stream_telemetry(
+    websocket: WebSocket,
+    drone_id: UUID | None = None,
+    interval: float = STREAM_INTERVAL_SECONDS,
+):
     """Push a simulated telemetry sample once per second.
 
-    Each sample drifts from the last, so the stream reads as a continuous
-    flight. Samples are not persisted: they reference no real drone, and
+    Each sample drifts from the last and is fed through the drone's state
+    machine, so `fsm_state` reflects real obstacle and battery decisions.
+    Samples are not persisted: they reference no real drone, and
     `telemetry_logs.drone_id` is a foreign key into `drones`.
+
+    `interval` overrides the one-second cadence, which is useful for
+    watching the state machine cycle without waiting in real time.
 
     Websocket routes do not appear in the OpenAPI schema, so this endpoint
     is absent from /docs by design.
@@ -33,6 +41,6 @@ async def stream_telemetry(websocket: WebSocket, drone_id: UUID | None = None):
                 drone_id=drone_id, previous=previous
             )
             await websocket.send_text(previous.model_dump_json())
-            await asyncio.sleep(STREAM_INTERVAL_SECONDS)
+            await asyncio.sleep(interval)
     except WebSocketDisconnect:
         logger.info("Telemetry client disconnected")

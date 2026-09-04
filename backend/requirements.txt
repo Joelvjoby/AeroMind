@@ -4,3 +4,7 @@ sqlalchemy
 psycopg2-binary
 python-dotenv
 alembic
+
+# Required by the AI modules mounted at /app/ai
+numpy
+scipy

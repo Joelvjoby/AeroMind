@@ -69,6 +69,7 @@ class TaskSummary(BaseModel):
     status: TaskStatus
     assigned_at: datetime | None = None
     completed_at: datetime | None = None
+    planned_path: list[dict[str, float]] | None = None
 
 
 class MissionReportResponse(BaseModel):
