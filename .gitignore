@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# AeroMind
+.DS_Store
+node_modules/
+postgres_data/
