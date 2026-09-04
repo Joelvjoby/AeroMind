@@ -91,7 +91,11 @@ class TestLowBatteryFlow:
 
 
 class TestBlockedHoldFlow:
-    """NORMAL -> REPLANNING -> BLOCKED_HOLD -> REPLANNING -> NORMAL."""
+    """Holding and recovering.
+
+    Two ways out of BLOCKED_HOLD: RESUME to re-plan around the obstruction,
+    or PATH_CLEAR to resume the original route once it opens up again.
+    """
 
     def test_full_hold_and_recover_cycle(self):
         fsm = DroneFSM("d1")
@@ -117,6 +121,45 @@ class TestBlockedHoldFlow:
         with pytest.raises(InvalidTransitionError):
             fsm.transition(Trigger.HOLD)
 
+    def test_path_clear_returns_a_held_drone_straight_to_normal(self):
+        fsm = DroneFSM("d1")
+
+        states = drive(fsm, Trigger.OBSTACLE_DETECTED, Trigger.HOLD, Trigger.PATH_CLEAR)
+
+        # The obstruction cleared on its own, so no re-plan is needed.
+        assert states == [
+            DroneState.REPLANNING,
+            DroneState.BLOCKED_HOLD,
+            DroneState.NORMAL,
+        ]
+        assert fsm.previous_state == DroneState.BLOCKED_HOLD
+
+    def test_path_clear_skips_the_replanning_detour(self):
+        cleared = DroneFSM("cleared")
+        replanned = DroneFSM("replanned")
+
+        drive(cleared, Trigger.OBSTACLE_DETECTED, Trigger.HOLD, Trigger.PATH_CLEAR)
+        drive(
+            replanned,
+            Trigger.OBSTACLE_DETECTED,
+            Trigger.HOLD,
+            Trigger.RESUME,
+            Trigger.REPLAN_DONE,
+        )
+
+        # Both routes land in NORMAL, but PATH_CLEAR gets there in one fewer hop.
+        assert cleared.current_state == replanned.current_state == DroneState.NORMAL
+        assert cleared.previous_state == DroneState.BLOCKED_HOLD
+        assert replanned.previous_state == DroneState.REPLANNING
+
+    def test_drone_can_be_held_again_after_clearing(self):
+        fsm = DroneFSM("d1")
+
+        drive(fsm, Trigger.OBSTACLE_DETECTED, Trigger.HOLD, Trigger.PATH_CLEAR)
+        states = drive(fsm, Trigger.OBSTACLE_DETECTED, Trigger.HOLD)
+
+        assert states == [DroneState.REPLANNING, DroneState.BLOCKED_HOLD]
+
 
 class TestInvalidTransitions:
     """Undefined (state, trigger) pairs are rejected, not silently ignored."""
@@ -133,12 +176,12 @@ class TestInvalidTransitions:
         with pytest.raises(InvalidTransitionError, match="scout-7.*NORMAL"):
             fsm.transition(Trigger.RESUME)
 
-    def test_path_clear_has_no_defined_transition(self):
-        # PATH_CLEAR is declared as a trigger but appears in no transition,
-        # so it is currently rejected from every state.
-        for state_setup in ([], [Trigger.OBSTACLE_DETECTED], [Trigger.BATTERY_LOW]):
+    def test_path_clear_is_rejected_outside_blocked_hold(self):
+        # PATH_CLEAR only means something to a drone that is actually holding;
+        # BLOCKED_HOLD -> NORMAL is covered in TestBlockedHoldFlow.
+        for setup in ([], [Trigger.OBSTACLE_DETECTED], [Trigger.BATTERY_LOW]):
             fsm = DroneFSM("d1")
-            drive(fsm, *state_setup)
+            drive(fsm, *setup)
 
             with pytest.raises(InvalidTransitionError):
                 fsm.transition(Trigger.PATH_CLEAR)

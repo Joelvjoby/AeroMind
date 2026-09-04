@@ -17,6 +17,7 @@ TRANSITIONS = {
     (DroneState.REPLANNING, Trigger.REPLAN_DONE): DroneState.NORMAL,
     (DroneState.REPLANNING, Trigger.HOLD): DroneState.BLOCKED_HOLD,
     (DroneState.BLOCKED_HOLD, Trigger.RESUME): DroneState.REPLANNING,
+    (DroneState.BLOCKED_HOLD, Trigger.PATH_CLEAR): DroneState.NORMAL,
     (DroneState.LOW_BATTERY_RETURN, Trigger.MISSION_COMPLETE): DroneState.COMPLETE,
 }
 
