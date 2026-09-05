@@ -1,4 +1,5 @@
 import type { DroneStatus } from "@/lib/api";
+import { batteryColor } from "@/lib/ui";
 
 export interface DroneStatusCardProps {
   id: string;
@@ -16,13 +17,6 @@ const STATUS_STYLES: Record<DroneStatus, string> = {
   LOW_BATTERY: "bg-yellow-500/20 text-yellow-300 ring-1 ring-yellow-500/40",
   LOST: "bg-red-500/20 text-red-300 ring-1 ring-red-500/40",
 };
-
-/** Battery bar colour: green above 50%, yellow down to 20%, red below. */
-function batteryColor(level: number) {
-  if (level > 0.5) return "bg-green-500";
-  if (level >= 0.2) return "bg-yellow-500";
-  return "bg-red-500";
-}
 
 export default function DroneStatusCard({
   name,
