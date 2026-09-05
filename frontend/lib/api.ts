@@ -41,6 +41,8 @@ export interface Mission {
   name: string;
   status: MissionStatus;
   created_at: string | null;
+  /** 0 on a freshly created mission's own response; real elsewhere. */
+  task_count: number;
 }
 
 export interface Waypoint {

@@ -2,6 +2,8 @@
 
 import logging
 
+from sqlalchemy import func
+
 from path_planning.astar import AStarPlanner
 from path_planning.grid import METERS_PER_DEGREE_LAT, Grid
 from task_allocation.allocator import allocate
@@ -177,11 +179,29 @@ def plan_route(start_lat, start_lon, goal_lat, goal_lon):
 
 
 def get_missions(db, status=None):
-    """Return missions newest first, optionally filtered by status."""
-    query = db.query(Mission)
+    """Return missions newest first, each with its task count attached.
+
+    One aggregate query rather than counting per mission, so the list scales
+    with mission count instead of mission count times task count.
+    """
+    query = (
+        db.query(Mission, func.count(Task.id).label("task_count"))
+        .outerjoin(Task, Task.mission_id == Mission.id)
+        .group_by(Mission.id)
+    )
     if status is not None:
         query = query.filter(Mission.status == status)
-    return query.order_by(Mission.created_at.desc()).all()
+
+    return [
+        {
+            "id": mission.id,
+            "name": mission.name,
+            "status": mission.status,
+            "created_at": mission.created_at,
+            "task_count": task_count,
+        }
+        for mission, task_count in query.order_by(Mission.created_at.desc()).all()
+    ]
 
 
 def get_mission(db, mission_id):

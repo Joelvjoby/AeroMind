@@ -1,10 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import DroneStatusCard from "@/components/DroneStatusCard";
 import { getAlerts, getDrones, getMissions } from "@/lib/api";
 import type { Alert, Drone, Mission } from "@/lib/api";
+import { MISSION_STATUS_STYLES, formatDate } from "@/lib/ui";
 
 const REFRESH_INTERVAL_MS = 5000;
 
@@ -18,6 +20,66 @@ function StatCard({ label, value }: { label: string; value: number | null }) {
       <p className="mt-1 text-3xl font-semibold tabular-nums text-white">
         {value ?? "—"}
       </p>
+    </div>
+  );
+}
+
+function MissionCard({ mission }: { mission: Mission }) {
+  const router = useRouter();
+
+  // The card is one big click target to /missions/{id}; "View Report" is a
+  // nested control that needs its own destination, so it stops the click
+  // from bubbling up to the card rather than nesting an <a> inside an <a>.
+  const openTelemetry = () => router.push(`/missions/${mission.id}`);
+  const openReport = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    router.push(`/missions/${mission.id}/report`);
+  };
+
+  return (
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={openTelemetry}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openTelemetry();
+        }
+      }}
+      data-testid="mission-card"
+      className="cursor-pointer rounded-lg bg-gray-800 p-5 ring-1 ring-gray-700/60 transition-colors hover:bg-gray-800/70 hover:ring-gray-600"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="truncate font-semibold text-white">{mission.name}</h3>
+        <span
+          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+            MISSION_STATUS_STYLES[mission.status] ?? "bg-gray-700 text-gray-200"
+          }`}
+        >
+          {mission.status}
+        </span>
+      </div>
+
+      <dl className="mt-4 flex items-center gap-5 text-xs text-gray-400">
+        <div className="flex gap-1.5">
+          <dt>Created:</dt>
+          <dd className="text-gray-300">{formatDate(mission.created_at)}</dd>
+        </div>
+        <div className="flex gap-1.5">
+          <dt>Tasks:</dt>
+          <dd className="text-gray-300">{mission.task_count}</dd>
+        </div>
+      </dl>
+
+      <button
+        type="button"
+        onClick={openReport}
+        data-testid="view-report"
+        className="mt-4 rounded-md bg-gray-700 px-3 py-1.5 text-xs font-medium text-gray-100 transition-colors hover:bg-gray-600"
+      >
+        View Report
+      </button>
     </div>
   );
 }
@@ -116,6 +178,26 @@ export default function DashboardPage() {
                 battery_level={drone.battery_level}
                 fsm_state={drone.fsm_state}
               />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-lg font-semibold tracking-tight">
+          Recent Missions
+        </h2>
+
+        {loading ? (
+          <p className="mt-4 text-sm text-gray-400">Loading missions…</p>
+        ) : missions.length === 0 ? (
+          <p className="mt-4 rounded-lg bg-gray-800/60 px-4 py-6 text-sm text-gray-400 ring-1 ring-gray-700/60">
+            No missions yet.
+          </p>
+        ) : (
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {missions.map((mission) => (
+              <MissionCard key={mission.id} mission={mission} />
             ))}
           </div>
         )}

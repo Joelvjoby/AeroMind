@@ -57,3 +57,8 @@ export function formatTime(value: string | null | undefined): string {
   const date = parseServerDate(value);
   return date ? date.toLocaleTimeString() : "—";
 }
+
+export function formatDate(value: string | null | undefined): string {
+  const date = parseServerDate(value);
+  return date ? date.toLocaleDateString() : "—";
+}

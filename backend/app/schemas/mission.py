@@ -51,6 +51,9 @@ class MissionResponse(BaseModel):
     name: str
     status: MissionStatus
     created_at: datetime | None = None
+    # Absent from a bare ORM object (POST /missions, GET /missions/{id}),
+    # so it defaults to 0 there; the list endpoint populates it for real.
+    task_count: int = 0
 
 
 class MissionDetailResponse(MissionResponse):
